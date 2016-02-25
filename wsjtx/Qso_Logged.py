@@ -19,33 +19,33 @@ class Qso_Logged:
     def __init__(self, data):
         string_length, self.id_key = myutils.get_utf8_string(data)
         # print("  id_key: {} (len:{})".format(self.id_key, string_length))
-
         tmp = 4 + string_length
+        
         self.date_time = myutils.get_datetime(data[tmp:])
-
         tmp += 4
-        self.dx_call = myutils.get_utf8_string(data[tmp:])
-
-        tmp += 4
-        self.dx_grid = myutils.get_utf8_string(data[tmp:])
-
-        tmp += 4
+        
+        len, self.dx_call = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + len
+        
+        len, self.dx_grid = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + len
+        
         self.dial_freq = myutils.get_uint32(data[tmp:])
-
         tmp += 4
-        self.mode = myutils.get_utf8_string(data[tmp:])
-
-        tmp += 4
-        self.report_send = myutils.get_utf8_string(data[tmp:])
-
-        tmp += 4
-        self.report_recv = myutils.get_utf8_string(data[tmp:])
-
-        tmp += 4
-        self.tx_power = myutils.get_utf8_string(data[tmp:])
-
-        tmp += 4
-        self.name = myutils.get_utf8_string(data[tmp:])
+        
+        len, self.mode = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + len
+        
+        len, self.report_send = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + len
+        
+        len, self.report_recv = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + len
+        
+        len, self.tx_power = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + len
+        
+        len, self.name = myutils.get_utf8_string(data[tmp:])
 
     def do_print(self):
         print("{} logged QSO with {} ({}) on {} using {}. Send {} received {}".format(
