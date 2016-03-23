@@ -19,33 +19,42 @@ class Qso_Logged:
     def __init__(self, data):
         string_length, self.id_key = myutils.get_utf8_string(data)
         # print("  id_key: {} (len:{})".format(self.id_key, string_length))
-
         tmp = 4 + string_length
+
         self.date_time = myutils.get_datetime(data[tmp:])
+        tmp += 13
+        # print("datetime:{}".format(self.date_time))
 
-        tmp += 4
-        self.dx_call = myutils.get_utf8_string(data[tmp:])
+        string_length, self.dx_call = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + string_length
+        # print("DX_Call:"+self.dx_call)
 
-        tmp += 4
-        self.dx_grid = myutils.get_utf8_string(data[tmp:])
+        string_length, self.dx_grid = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + string_length
+        # print("dx_grid:"+self.dx_grid)
 
-        tmp += 4
-        self.dial_freq = myutils.get_uint32(data[tmp:])
+        self.dial_freq = myutils.get_int64(data[tmp:])
+        tmp += 8
+        # print("Dial:{}".format(self.dial_freq))
 
-        tmp += 4
-        self.mode = myutils.get_utf8_string(data[tmp:])
+        string_length, self.mode = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + string_length
+        # print("mode:"+self.mode)
 
-        tmp += 4
-        self.report_send = myutils.get_utf8_string(data[tmp:])
+        string_length, self.report_sent = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + string_length
+        # print("report_sent:"+self.report_sent)
 
-        tmp += 4
-        self.report_recv = myutils.get_utf8_string(data[tmp:])
+        string_length, self.report_recv = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + string_length
+        # print("report_recv:"+self.report_recv)
 
-        tmp += 4
-        self.tx_power = myutils.get_utf8_string(data[tmp:])
+        string_length, self.tx_power = myutils.get_utf8_string(data[tmp:])
+        tmp += 4 + string_length
+        # print("rx_power:"+self.tx_power)
 
-        tmp += 4
-        self.name = myutils.get_utf8_string(data[tmp:])
+        string_length, self.name = myutils.get_utf8_string(data[tmp:])
+        # print("name:"+self.name)
 
     def do_print(self):
         print("{} logged QSO with {} ({}) on {} using {}. Send {} received {}".format(

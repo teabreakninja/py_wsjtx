@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import struct
+import math
 
 
 class PacketType():
@@ -24,7 +25,8 @@ class DataSize():
     _float = 4
     _double = 8
     _boolean = 1
-    _datetime = 4
+    _datetime = 13
+    _time = 4
 
 
 def debug_packet(data):
@@ -41,14 +43,14 @@ def get_utf8_string(data):
     string_length = get_uint32(data)
     # print("[*] String length:{}".format(string_length))
     if string_length == 0:
-        id_key = ""
+        the_string = ""
     elif data[0:4] == "\xFF\xFF\xFF\xFF":
-        string_length, id_key = 0, ""
+        string_length, the_string = 0, ""
     else:
-        id_key = data[4:4 + string_length]
-        # print("[*] Key = {}".format(id_key))
+        the_string = data[4:4 + string_length]
+        # print("[*] Key = {}".format(the_string))
 
-    return string_length, id_key
+    return string_length, the_string
 
 
 def get_uint32(data):
@@ -82,16 +84,78 @@ def get_boolean(data):
 
 
 def get_datetime(data):
+	# debug_hex(data)
+	return get_date(data[:8])  + " " + get_time(data[8:12]) + " " + get_timespec(data[12:1])
+
+
+def get_date(data):
     # debug_hex(data)
-    # julian_day = get_int64(data)
+    julian_day = get_int64(data)
+    print julian_day
+
+    year, month, day = jd_to_date(julian_day)
+    return "{}/{}/{}".format(year, month, int(day))
+
+
+def get_time(data):
+    # debug_hex(data)
     julian_day = get_int32(data)
 
     import time
     t = time.gmtime(julian_day/1000)
     dt = time.strftime("%H:%M", t)
 
-    # print("j-day:{}".format(julian_day))
     return dt
+    
+
+def get_timespec(data):
+    # debug_hex(data)
+    if data == "\x00":
+        return "Local"
+    elif data == "\x01":
+        return "UTC"
+    elif data == "\x02":
+        return "Offset from UTC"
+    elif data == "\x03":
+        return "TimeZone"
+    else:
+        return ""
+
+"""
+Taken from:
+	Matt Davis
+	http://github.com/jiffyclub
+"""
+def jd_to_date(jd):
+    jd = jd + 0.5
+
+    F, I = math.modf(jd)
+    I = int(I)
+
+    A = math.trunc((I - 1867216.25)/36524.25)
+
+    if I > 2299160:
+        B = I + 1 + A - math.trunc(A / 4.)
+    else:
+        B = I
+
+    C = B + 1524
+    D = math.trunc((C - 122.1) / 365.25)
+    E = math.trunc(365.25 * D)
+    G = math.trunc((C - E) / 30.6001)
+    day = C - E + F - math.trunc(30.6001 * G)
+
+    if G < 13.5:
+        month = G - 1
+    else:
+        month = G - 13
+
+    if month > 2.5:
+        year = D - 4716
+    else:
+        year = D - 4715
+
+    return year, month, day
 
 
 def validate_callsign(call):

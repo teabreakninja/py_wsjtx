@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 import socket
 import struct
 import sys
@@ -63,6 +62,7 @@ def main():
                 pass
 
             elif packet_type == PacketType.QSO_Logged:
+                # myutils.debug_packet(data)
                 payload = Qso_Logged(data[12:])
                 payload.do_print()
 

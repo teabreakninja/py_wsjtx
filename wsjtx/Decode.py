@@ -16,14 +16,12 @@ class Decode:
 
     def __init__(self, data):
         string_length, self.id_key = myutils.get_utf8_string(data)
-        # print("  id_key: {} (len:{})".format(self.id_key, string_length))
 
         tmp = 4 + string_length
         self.new_id = myutils.get_boolean(data[tmp:])
-        # print("  [*] new: {}".format(self.new_id))
 
         tmp += 1
-        self.now_time = myutils.get_datetime(data[tmp:])
+        self.now_time = myutils.get_time(data[tmp:])
 
         tmp += 4
         self.snr = myutils.get_int32(data[tmp:])
