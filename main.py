@@ -43,15 +43,16 @@ def main():
                 payload.do_print()
                 if payload.message[:2] == "CQ":
                     cq = payload.message.split(" ")
-                    if (myutils.validate_callsign(cq[1])):
-                        if (len(cq) ==2):
-                            cq[2] = 'None'
-                        print("[***] CQ CALLED BY {} ({})".format(cq[1], cq[2]))
-                        if (myutils.validate_locator(cq[2])):
-                            print("  [*] Distance: {:.0f}km, Bearing:{:.0f}".format(
-                                    locator.calculate_distance("io64", cq[2]),
-                                    locator.calculate_heading("io64", cq[2])
-                                ))
+                    if len(cq) > 1:
+                        if (myutils.validate_callsign(cq[1])):
+                            if (len(cq) ==2):
+                                cq[2] = 'None'
+                            print("[***] CQ CALLED BY {} ({})".format(cq[1], cq[2]))
+                            if (myutils.validate_locator(cq[2])):
+                                print("  [*] Distance: {:.0f}km, Bearing:{:.0f}".format(
+                                        locator.calculate_distance("io64", cq[2]),
+                                        locator.calculate_heading("io64", cq[2])
+                                    ))
 
             elif packet_type == PacketType.Clear:
                 payload = Clear(data[12:])
