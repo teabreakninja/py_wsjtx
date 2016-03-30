@@ -88,7 +88,10 @@ def main():
 
                         if cq_call == "DX":
                             cq_call = cq[2]
-                            cq_loc = cq[3]
+                            if len(cq) > 3:
+                                cq_loc = cq[3]
+                            else:
+                                cq_loc = ""
 
                         if cq_loc == "DX":
                             if len(cq) > 3:

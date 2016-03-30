@@ -57,7 +57,7 @@ class Dxcc():
 
     def find_country(self, callsign):
         c_len = len(callsign)
-        size = 1
+        size = 0
 
         # Work from the end of the callsign to
         # the start, trying to match a prefix
