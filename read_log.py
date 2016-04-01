@@ -23,7 +23,9 @@ class WsjtxLog:
 
 
     def get_band(self, freq):
-        bands = {"70": "4m",
+        bands = {"144": "2m",
+                 "145": "2m",
+                 "70": "4m",
                  "50": "6m",
                  "28": "10m",
                  "24": "12m",
@@ -71,12 +73,12 @@ class WsjtxLog:
                 # Worked call on this band - GREEN
                 return self.WORKED_COUNTRY_AND_STATION
             else:
-                print("[*] worked diff band")
-
+                # print("[*] worked diff band")
+                pass
         # Haven't worked the callsign on this band
         # before, have we worked the country?
         callsign_country = self.dxcc.find_country(call)
-        print("[*] Country:{}".format(callsign_country))
+        # print("[*] Country:{}".format(callsign_country))
 
         if callsign_country in self.country_list:
             if band in self.country_list[callsign_country]:

@@ -10,6 +10,7 @@ import myutils
 from myutils import PacketType
 from pyhamtools import locator
 from read_log import WsjtxLog
+from WsjtxCurses import WsjtxCurses
 
 class bcolors:
     """
@@ -49,9 +50,16 @@ def main():
 
     sock.bind(server_address)
 
+    use_curses = True
+    jt_curses = WsjtxCurses()
+
     # Read existing log file
     log = WsjtxLog()
-    print("[*] Logfile found, {} entries read, {} stations.".format(log.entry_count, len(log.log_entries)))
+    log_info = "[*] Logfile found, {} entries read, {} stations.".format(log.entry_count, len(log.log_entries))
+    if use_curses:
+        jt_curses.add_main_window(log_info)
+    else:
+        print(log_info)
 
     current_band = ""
 
@@ -65,18 +73,36 @@ def main():
             # print("[*] packet_type:{}".format(packet_type))
             if packet_type == PacketType.Heartbeat:
                 payload = Heartbeat(data[12:])
-                print("[*] Heartbeat [{}]".format(datetime.datetime.now()))
+                if use_curses:
+                    jt_curses.update_heartbeat(datetime.datetime.now().strftime("%H:%M:%S"))
+                else:
+                    print("[*] Heartbeat [{}]".format(datetime.datetime.now()))
 
             elif packet_type == PacketType.Status:
                 payload = StateChange(data[12:])
-                payload.do_print()
+                if use_curses:
+                    jt_curses.set_banner(payload.dial_freq,
+                                         payload.tx_mode,
+                                         payload.tx_enabled)
+                else:
+                    print payload.do_print()
                 current_band = log.get_band(str(payload.dial_freq/1000/1000))
                 # print("[!] Current band: {}".format(current_band))
 
             elif packet_type == PacketType.Decode:
                 # myutils.debug_packet(data)
                 payload = Decode(data[12:])
-                payload.do_print()
+                if use_curses:
+                    jt_curses.add_main_window("[{}] db:{:0>2} DT:{:.1f} Freq:{} Mode:{} Msg: {}".format(
+                            payload.now_time,
+                            str(payload.snr).rjust(2),
+                            payload.delta_time,
+                            str(payload.delta_freq).rjust(4),
+                            payload.mode,
+                            payload.message)
+                            )
+                else:
+                    payload.do_print()
                 if payload.message[:2] == "CQ":
                     cq = payload.message.split(" ")
                     if len(cq) > 1:
@@ -122,16 +148,25 @@ def main():
                                 colour = bcolors.NOT_WORKED
                                 status = "Call:N;Band:N;Country:N"
 
-                            print("[***] CQ CALLED BY {}{}{} ({}) [{}]".format(colour, cq_call, bcolors.ENDC, cq_loc, status))
-                            if (myutils.validate_locator(cq[2])):
-                                print("  [*] Distance: {:.0f}km, Bearing:{:.0f}".format(
-                                        locator.calculate_distance("io64", cq_loc),
-                                        locator.calculate_heading("io64", cq_loc)
-                                    ))
+                            if use_curses:
+                                jt_curses.add_cq("CQ CALLED BY ", cq_call, band+1, " ({}) {} [{}]".format(
+                                                cq_loc,
+                                                log.dxcc.find_country(cq_call),
+                                                status))
+                            else:
+                                print("[***] CQ CALLED BY {}{}{} ({}) [{}]".format(colour, cq_call, bcolors.ENDC, cq_loc, status))
+                                if (myutils.validate_locator(cq[2])):
+                                    print("  [*] Distance: {:.0f}km, Bearing:{:.0f}".format(
+                                            locator.calculate_distance("io64", cq_loc),
+                                            locator.calculate_heading("io64", cq_loc)
+                                        ))
 
             elif packet_type == PacketType.Clear:
                 payload = Clear(data[12:])
-                payload.do_print()
+                if use_curses:
+                    jt_curses.add_main_window("[*] Clear Called")
+                else:
+                    payload.do_print()
 
             elif packet_type == PacketType.Reply:
                 # Not used, this is an out message
@@ -140,13 +175,19 @@ def main():
             elif packet_type == PacketType.QSO_Logged:
                 # myutils.debug_packet(data)
                 payload = Qso_Logged(data[12:])
-                payload.do_print()
+                if use_curses:
+                    jt_curses.add_main_window("[*] Logged QSO with {}".format(payload.dx_call))
+                else:
+                    payload.do_print()
                 # re-read the log file
                 log.read_log()
 
             elif packet_type == PacketType.Close:
                 payload = Close(data[12:])
-                payload.do_print
+                if use_curses:
+                    jt_curses.add_main_window("[!] Exit called")
+                else:
+                    payload.do_print
                 sys.exit(0)
 
             elif packet_type == PacketType.Replay:
@@ -166,8 +207,14 @@ def main():
                 payload.do_print()
 
             else:
-                print("[*] Packet type: {}".format(packet_type))
+                if use_curses:
+                    jt_curses.add_main_window("[*] Packet type: {}".format(packet_type))
+                else:
+                    print("[*] Packet type: {}".format(packet_type))
+
     except KeyboardInterrupt:
+        if use_curses:
+            jt_curses.exit_now()
         print("ctrl-c caught, exiting")
 
 if __name__ == "__main__":
