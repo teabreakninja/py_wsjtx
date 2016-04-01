@@ -90,22 +90,31 @@ class WsjtxCurses:
         self.stdscr.refresh()
 
     def main(self):
-        self.set_banner("14.076.00", "JT65/JT9", "Tx")
-
-        self.thread_flag = True
-        thread.start_new_thread(self.add_to_window, ())
+        # self.set_banner("14.076.00", "JT65/JT9", "Tx")
+        #
+        # self.thread_flag = True
+        # thread.start_new_thread(self.add_to_window, ())
 
         key = ''
         while True:
             key = self.stdscr.getch()
             if key == ord('q'):
-                self.thread_flag = False
-                break
+                # self.thread_flag = False
+                # break
+                pass
+            elif key == curses.KEY_DOWN:
+                # scroll down ?
+                self.main_win.scroll(-1)
+                pass
+            elif key == curses.KEY_UP:
+                # scroll up ?
+                self.main_win.scroll(1)
+                pass
 
         self.exit_now()
 
     def exit_now(self):
-        self.thread_flag = False
+        # self.thread_flag = False
         self.stdscr.refresh()
 
         # end

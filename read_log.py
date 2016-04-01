@@ -63,8 +63,8 @@ class WsjtxLog:
                 if not country is None:
                     if not country in self.country_list:
                         self.country_list[country] = []
-
-                    self.country_list[country].append( band )
+                    if not band in self.country_list[country]:
+                        self.country_list[country].append( band )
 
 
     def check_entry(self, call, band):
@@ -74,11 +74,15 @@ class WsjtxLog:
                 return self.WORKED_COUNTRY_AND_STATION
             else:
                 # print("[*] worked diff band")
+                # TODO:!
+                # We have worked the station, but on a different
+                # band, but are we working countries? Do we
+                # continue to check for country & band?
                 pass
+                
         # Haven't worked the callsign on this band
         # before, have we worked the country?
         callsign_country = self.dxcc.find_country(call)
-        # print("[*] Country:{}".format(callsign_country))
 
         if callsign_country in self.country_list:
             if band in self.country_list[callsign_country]:
@@ -118,18 +122,13 @@ if __name__ == "__main__":
     # Print the list
     # for entry in log:
     #     print("Call:{} on band:{}".format(entry, log[entry]))
+    # for country in log.country_list:
+    #     print("Country:{}, bands:{}".format(country, log.country_list[country]))
 
     # Test
-    call = "SQ9OUM"
-    band = log.check_entry(call)
+    call = "ES8DH"
+    band = log.check_entry(call, "20m")
     if band:
-        print("'{}': found exisiting QSO on {} band".format(call, band))
-    else:
-        print("'{}' Not found".format(call))
-
-    call = "DL5JMN"
-    band = log.check_entry(call)
-    if band:
-        print("'{}': found exisiting QSO on {} band".format(call, band))
+        print("'{}': found existing QSO on {} band".format(call, band))
     else:
         print("'{}' Not found".format(call))

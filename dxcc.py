@@ -63,7 +63,11 @@ class Dxcc():
         # Work from the end of the callsign to
         # the start, trying to match a prefix
         while size < c_len:
-            to_test = callsign[:-size]
+            if size == 0:
+                to_test = callsign
+            else:
+                to_test = callsign[:-size]
+
             for prefix in self.country_list:
                 if to_test == prefix:
                     return self.country_list[prefix]
@@ -76,5 +80,5 @@ class Dxcc():
 if __name__ == "__main__":
     dxcc = Dxcc()
 
-    country = dxcc.find_country('2E0ABC')
+    country = dxcc.find_country('RN2F')
     print country
