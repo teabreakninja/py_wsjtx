@@ -110,7 +110,10 @@ def main():
                         # 'CQ DX CALL LOC' or
                         # 'CQ CALL DX LOC'
                         cq_call = cq[1]
-                        cq_loc = cq[2]
+                        if len(cq) == 2:
+                            cq_loc = ""
+                        else:
+                            cq_loc = cq[2]
 
                         if cq_call == "DX":
                             cq_call = cq[2]
