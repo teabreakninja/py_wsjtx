@@ -79,7 +79,7 @@ class WsjtxLog:
                 # band, but are we working countries? Do we
                 # continue to check for country & band?
                 pass
-                
+
         # Haven't worked the callsign on this band
         # before, have we worked the country?
         callsign_country = self.dxcc.find_country(call)
@@ -95,25 +95,29 @@ class WsjtxLog:
         # New country - WHITE ON RED
         return self.NOT_WORKED
 
-    # def check_entry2(self, call, band):
-    #     result = {"call": False, "band": False, "country": False}
-    #     if call in self.log_entries:
-    #         # by working the call, you've worked the country too
-    #         result["call"] = True
-    #         result["country"] = True
-    #
-    #         # on this band?
-    #         if band in self.log_entries[call]:
-    #             result["band"] = True
-    #         return result
-    #
-    #     # Haven't worked the call, have we worked the country?
-    #     callsign_country = self.dxcc.find_country(call)
-    #     if callsign_country in self.country_list:
-    #         result["country"] = True
-    #         if band in self.country_list[callsign_country]:
-    #             result["band"] = True
-    #     return result
+    def check_entry2(self, call, band):
+        result = {"call": False, "call_band": False,
+                  "country": False, "country_band": False, }
+        if call in self.log_entries:
+            # by working the call, you've worked the country too
+            result["call"] = True
+            result["country"] = True
+
+            # on this band?
+            if band in self.log_entries[call]:
+                # by default call on this band is country this band too
+                result["call_band"] = True
+                result["country_band"] = True
+                return result
+
+        # Haven't worked the call, or have worked on
+        # a different band. Have we worked the country?
+        callsign_country = self.dxcc.find_country(call)
+        if callsign_country in self.country_list:
+            result["country"] = True
+            if band in self.country_list[callsign_country]:
+                result["country_band"] = True
+        return result
 
 
 if __name__ == "__main__":
@@ -127,8 +131,8 @@ if __name__ == "__main__":
 
     # Test
     call = "ES8DH"
-    band = log.check_entry(call, "20m")
+    band = log.check_entry2(call, "20m")
     if band:
-        print("'{}': found existing QSO on {} band".format(call, band))
+        print("'{}': found existing QSO results: {}".format(call, band))
     else:
         print("'{}' Not found".format(call))

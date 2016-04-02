@@ -63,6 +63,11 @@ def main():
 
     current_band = ""
 
+    data, server = sock.recvfrom(1024)
+    p = header.create_header()
+    p += Replay.create_packet()
+    sock.sendto(p, server)
+
     try:
         while True:
             data, server = sock.recvfrom(1024)
@@ -129,33 +134,56 @@ def main():
                                 cq_loc = ""
 
                         if (myutils.validate_callsign(cq_call)):
-                            band = log.check_entry(cq_call, current_band)
-
-                            if band == log.WORKED_COUNTRY_AND_STATION:
-                                # Worked before on same band
-                                colour = bcolors.WKD_BEFORE
-                                status = "Call:Y;Band:Y;Country:Y"
-
-                            elif band == log.WORKED_COUNTRY_DIFF_BAND:
-                                # worked before on different band
-                                colour = bcolors.WKD_COUNTRY_DIFF_BAND
-                                status = "Call:N;Band:N;Country:Y"
-
-                            elif band == log.WORKED_COUNTRY_NOT_STATION:
-                                # Worked country, not station
-                                colour = bcolors.WKD_COUNTRY_NOT_STATION
-                                status = "Call:N;Band:Y;Country:Y"
-
+                            # band = log.check_entry(cq_call, current_band)
+                            # if band == log.WORKED_COUNTRY_AND_STATION:
+                            #     # Worked before on same band
+                            #     colour = bcolors.WKD_BEFORE
+                            #     status = "Call:Y;Band:Y;Country:Y"
+                            #
+                            # elif band == log.WORKED_COUNTRY_DIFF_BAND:
+                            #     # worked before on different band
+                            #     colour = bcolors.WKD_COUNTRY_DIFF_BAND
+                            #     status = "Call:N;Band:N;Country:Y"
+                            #
+                            # elif band == log.WORKED_COUNTRY_NOT_STATION:
+                            #     # Worked country, not station
+                            #     colour = bcolors.WKD_COUNTRY_NOT_STATION
+                            #     status = "Call:N;Band:Y;Country:Y"
+                            #
+                            # else:
+                            #     # not worked
+                            #     colour = bcolors.NOT_WORKED
+                            #     status = "Call:N;Band:N;Country:N"
+                            band = log.check_entry2(cq_call, current_band)
+                            if band["call"]:
+                                if band["call_band"]:
+                                    colour = bcolors.WKD_BEFORE
+                                    status = log.WORKED_COUNTRY_AND_STATION
+                                elif band["country_band"]:
+                                    colour = bcolors.WKD_COUNTRY_NOT_STATION
+                                    status = log.WORKED_COUNTRY_NOT_STATION
+                                else:
+                                    colour = bcolors.WKD_COUNTRY_DIFF_BAND
+                                    status = log.WORKED_COUNTRY_DIFF_BAND
                             else:
-                                # not worked
-                                colour = bcolors.NOT_WORKED
-                                status = "Call:N;Band:N;Country:N"
+                                if band["country"]:
+                                    if band["country_band"]:
+                                        colour = bcolors.WKD_COUNTRY_NOT_STATION
+                                        status = log.WORKED_COUNTRY_NOT_STATION
+                                    else:
+                                        colour = bcolors.WKD_COUNTRY_DIFF_BAND
+                                        status = log.WORKED_COUNTRY_DIFF_BAND
+                                else:
+                                    colour = bcolors.NOT_WORKED
+                                    status = log.NOT_WORKED
 
+                            # Now display
                             if use_curses:
-                                jt_curses.add_cq("CQ CALLED BY ", cq_call, band+1, " ({}) {} [{}]".format(
+                                jt_curses.add_cq(cq_call,
+                                                status+1,
                                                 cq_loc,
                                                 log.dxcc.find_country(cq_call),
-                                                status))
+                                                band)
                             else:
                                 print("[***] CQ CALLED BY {}{}{} ({}) [{}]".format(colour, cq_call, bcolors.ENDC, cq_loc, status))
                                 if (myutils.validate_locator(cq[2])):

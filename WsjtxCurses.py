@@ -77,10 +77,19 @@ class WsjtxCurses:
         self.header.refresh()
         self.stdscr.refresh()
 
-    def add_cq(self, before, the_text, colour, after):
+    def convert(self, val):
+        return "Y" if val else "N"
+
+    def add_cq(self, the_text, colour, loc, country, info):
         self.main_win.addstr("CQ CALLED BY ")
         self.main_win.addstr("{}".format(the_text), curses.color_pair(colour)|curses.A_BOLD)
-        self.main_win.addstr(" {}\n".format(after))
+        self.main_win.addstr(" [{}] {}\n".format(loc, country))
+        self.main_win.addstr("  [Call:{}, & Band:{}, Country:{}, & Band:{}]\n".format(
+            self.convert(info["call"]),
+            self.convert(info["call_band"]),
+            self.convert(info["country"]),
+            self.convert(info["country_band"])
+        ))
         self.main_win.refresh()
         self.stdscr.refresh()
 

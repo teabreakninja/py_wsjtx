@@ -19,3 +19,10 @@ class header:
             print("Not a valid schema: {}".format(schema))
 
         # print("[*] Header OK: {}, {}".format(magic, schema))
+
+    @staticmethod
+    def create_header():
+        packet = struct.pack(">L", int("0xadbccbda", 0))
+        packet += struct.pack(">L", 2)
+
+        return packet

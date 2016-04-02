@@ -14,3 +14,10 @@ class Replay:
 
     def do_print(self):
         pass
+
+    @staticmethod
+    def create_packet():
+        packet = myutils.set_uint32(7)
+        packet += myutils.set_utf8_string("WSJT-X")
+
+        return packet

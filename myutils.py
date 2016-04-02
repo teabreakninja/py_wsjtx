@@ -52,10 +52,17 @@ def get_utf8_string(data):
 
     return string_length, the_string
 
+def set_utf8_string(val):
+    string_length = len(val)
+    data = set_uint32(string_length)
+    data += val
+    return data
 
 def get_uint32(data):
     return struct.unpack(">I", data[0: 4])[0]
 
+def set_uint32(val):
+    return struct.pack(">I", val)
 
 def get_int32(data):
     return struct.unpack(">i", data[0: 4])[0]
@@ -106,7 +113,7 @@ def get_time(data):
     dt = time.strftime("%H:%M", t)
 
     return dt
-    
+
 
 def get_timespec(data):
     # debug_hex(data)
