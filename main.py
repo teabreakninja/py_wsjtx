@@ -12,6 +12,9 @@ from pyhamtools import locator
 from read_log import WsjtxLog
 from WsjtxCurses import WsjtxCurses
 
+from gi.repository import Notify
+
+
 class bcolors:
     """
     Print the terminal colours with bash:
@@ -41,6 +44,12 @@ class bcolors:
     NOT_WORKED = '\033[41m' # WHITE_ON_RED
 
 
+def popup_toast(cty):
+    Notify.init("DX")
+    dx = Notify.Notification.new("DX", "New Country:{}".format(cty), "dialog-information")
+    dx.set_timeout(2000)
+    dx.show()
+
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -63,10 +72,11 @@ def main():
 
     current_band = ""
 
-    data, server = sock.recvfrom(1024)
-    p = header.create_header()
-    p += Replay.create_packet()
-    sock.sendto(p, server)
+    # # Replay is PITA when testing
+    # data, server = sock.recvfrom(1024)
+    # p = header.create_header()
+    # p += Replay.create_packet()
+    # sock.sendto(p, server)
 
     try:
         while True:
@@ -176,6 +186,7 @@ def main():
                                 else:
                                     colour = bcolors.NOT_WORKED
                                     status = log.NOT_WORKED
+                                    popup_toast(log.dxcc.find_country(cq_call))
 
                             # Now display
                             if use_curses:
@@ -191,6 +202,12 @@ def main():
                                             locator.calculate_distance("io64", cq_loc),
                                             locator.calculate_heading("io64", cq_loc)
                                         ))
+                        else:
+                            msg = "[*] CQ by non-valid callsign?"
+                            if use_curses:
+                                jt_curses.add_main_window(msg)
+                            else:
+                                print(msg)
 
             elif packet_type == PacketType.Clear:
                 payload = Clear(data[12:])
