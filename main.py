@@ -52,6 +52,7 @@ def popup_toast(cty):
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     server_address = ('127.0.0.1', 2237)
 
