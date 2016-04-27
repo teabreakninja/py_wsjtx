@@ -14,6 +14,7 @@ from WsjtxCurses import WsjtxCurses
 
 from gi.repository import Notify
 
+
 class bcolors:
     """
     Print the terminal colours with bash:
@@ -91,7 +92,7 @@ def main():
         import paho.mqtt.client as paho
         mqtt_client=paho.Client()
         mqtt_client.connect(mqtt_server)
-	mqtt_client.publish("py_wsjtx/status", "Started at {}".format(datetime.datetime.now()))
+        mqtt_client.publish("py_wsjtx/status", "Started at {}".format(datetime.datetime.now()))
 
     # # Replay is PITA when testing
     # data, server = sock.recvfrom(1024)
