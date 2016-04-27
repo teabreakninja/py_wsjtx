@@ -63,10 +63,10 @@ def main():
     jt_curses = WsjtxCurses()
 
     # Enable DXCC notify alerts
-    notify_alert = False
+    notify_alert = True
 
     # Publish mqtt messages, requires paho installed
-    use_mqtt = True
+    use_mqtt = False
     mqtt_server = "192.168.0.200"
 
     # Write all decodes to a log file
