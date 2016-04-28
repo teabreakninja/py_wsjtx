@@ -3,6 +3,7 @@ import socket
 import struct
 import sys
 import datetime
+import json
 
 from header import header
 from wsjtx import *
@@ -117,8 +118,11 @@ def main():
 
             elif packet_type == PacketType.Status:
                 payload = StateChange(data[12:])
+
                 if use_mqtt:
-                    mqtt_client.publish("py_wsjtx/status","{} {} {}".format(payload.dial_freq, payload.tx_mode, payload.tx_enabled))
+                    mqtt_msg = json.dumps({'status_frequency': payload.dial_freq, 'status_mode': payload.tx_mode, 'status_tx': payload.tx_enabled})
+                    mqtt_client.publish("py_wsjtx/{}/status".format(payload.id_key), mqtt_msg)
+
                 if use_curses:
                     jt_curses.set_banner(payload.dial_freq,
                                          payload.tx_mode,
@@ -132,13 +136,8 @@ def main():
                 # myutils.debug_packet(data)
                 payload = Decode(data[12:])
                 if use_mqtt:
-                    mqtt_client.publish("py_wsjtx/decodes","[{}] db:{:0>2} DT:{:.1f} Freq:{} Mode:{} Msg: {}".format(
-                            payload.now_time,
-                            str(payload.snr).rjust(2),
-                            payload.delta_time,
-                            str(payload.delta_freq).rjust(4),
-                            payload.mode,
-                            payload.message))
+                    mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr).rjust(2), 'dt': payload.delta_time, 'freq': str(payload.delta_freq).rjust(4), 'mode': payload.mode, 'msg': payload.message})
+                    mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
                 if log_decodes:
                     out_log.write("[{}] db:{:0>2} DT:{:.1f} Freq:{} Mode:{} Msg: {}\n".format(
                             payload.now_time,
@@ -158,6 +157,7 @@ def main():
                             )
                 else:
                     payload.do_print()
+
                 if payload.message[:2] == "CQ":
                     cq = payload.message.split(" ")
                     if len(cq) > 1:
@@ -229,7 +229,9 @@ def main():
                                     if notify_alert:
                                         popup_toast(log.dxcc.find_country(cq_call))
                                     if use_mqtt:
-                                        mqtt_client.publish("py_wsjtx/dxcc", "{},{},{},{}".format(cq_call, cq_loc, log.dxcc.find_country(cq_call),current_band))
+                                        mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr), 'dxcc_call': cq_call, 'dxcc_locator': cq_loc, 'dxcc_country': log.dxcc.find_country(cq_call), 'dxcc_band': current_band})
+                                        mqtt_client.publish("py_wsjtx/{}/dxcc".format(payload.id_key), mqtt_msg)
+
                             # Now display
                             if use_curses:
                                 jt_curses.add_cq(cq_call,

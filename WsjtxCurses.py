@@ -49,7 +49,8 @@ class WsjtxCurses:
                 break
 
     def get_band(self, freq):
-        bands = {"70": "4m",
+        bands = {"144": "2m",
+                    "70": "4m",
                     "50": "6m",
                     "28": "10m",
                     "24": "12m",
