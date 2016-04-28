@@ -23,11 +23,14 @@ class WsjtxLog:
 
 
     def get_band(self, freq):
-        bands = {"144": "2m",
+        bands = {"430": "70cm",
+                 "144": "2m",
                  "145": "2m",
                  "70": "4m",
                  "50": "6m",
+                 "51": "6m",
                  "28": "10m",
+                 "29": "10m",
                  "24": "12m",
                  "21": "15m",
                  "18": "17m",
@@ -37,6 +40,9 @@ class WsjtxLog:
                  "3" : "80m"
                 }
         f = freq.split(".")
+        # Check 70cm range
+        if f in range(430, 439):
+            f = 430
         return bands[f[0]]
 
     def read_log(self):
