@@ -39,9 +39,9 @@ class Decode:
         msg_len, self.message = myutils.get_utf8_string(data[tmp:])
 
     def do_print(self):
-        print("Time:{} db:{} DT:{:.1f} Freq:{} Mode:{} Msg: {}".format(
+        print("Time:{} db:{: 03} DT:{: 04.1f} Freq:{} Mode:{} Msg: {}".format(
                 self.now_time,
-                str(self.snr).rjust(2),
+                self.snr,
                 self.delta_time,
                 str(self.delta_freq).rjust(4),
                 self.mode,

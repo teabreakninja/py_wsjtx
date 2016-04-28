@@ -98,7 +98,7 @@ def get_datetime(data):
 def get_date(data):
     # debug_hex(data)
     julian_day = get_int64(data)
-    print julian_day
+    # print julian_day
 
     year, month, day = jd_to_date(julian_day)
     return "{}/{}/{}".format(year, month, int(day))
