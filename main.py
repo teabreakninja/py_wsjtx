@@ -55,7 +55,7 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    server_address = ('127.0.0.1', 2239)
+    server_address = ('127.0.0.1', 2237)
 
     # sock.sendto('test message', server_address)
 
@@ -65,11 +65,11 @@ def main():
     jt_curses = WsjtxCurses()
 
     # Enable DXCC notify alerts
-    notify_alert = False
+    notify_alert = True
 
     # Publish mqtt messages, requires paho installed
     use_mqtt = False
-    mqtt_server = "192.168.0.201"
+    mqtt_server = "192.168.0.200"
 
     # Write all decodes to a log file
     log_decodes = False
