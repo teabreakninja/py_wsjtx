@@ -43,7 +43,7 @@ class WsjtxLog:
         # Check 70cm range
         if f in range(430, 439):
             f = 430
-        return bands[f[0]]
+        return bands.get(f[0],'???')
 
     def read_log(self):
         self.log_entries = {}
