@@ -62,7 +62,7 @@ class WsjtxCurses:
                     "3" : "80m"
                 }
         f = str(freq/1000/1000).split(".")
-        return bands[f[0]]
+        return bands.get(f[0],'???')
 
     def set_banner(self, freq, mode, tx):
         self.header.addstr(1, 2, "Freq: {:,}".format(freq))

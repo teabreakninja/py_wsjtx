@@ -84,6 +84,7 @@ def main():
         print(log_info)
 
     current_band = ""
+    state = {}
 
     if log_decodes:
         out_log = open(log_outfile, 'a', 0)
@@ -119,6 +120,9 @@ def main():
             elif packet_type == PacketType.Status:
                 payload = StateChange(data[12:])
 
+                # Set a per radio state
+                state[payload.id_key] = {'freq': payload.dial_freq, 'mode': payload.tx_mode, 'tx': payload.tx_enabled, 'band': log.get_band(str(payload.dial_freq/1000/1000))}
+
                 if use_mqtt:
                     mqtt_msg = json.dumps({'status_frequency': payload.dial_freq, 'status_mode': payload.tx_mode, 'status_tx': payload.tx_enabled})
                     mqtt_client.publish("py_wsjtx/{}/status".format(payload.id_key), mqtt_msg)
@@ -135,16 +139,23 @@ def main():
             elif packet_type == PacketType.Decode:
                 # myutils.debug_packet(data)
                 payload = Decode(data[12:])
+
+		# Get current radio state or return ???
+                decode_mode = state.get(payload.id_key, {}).get('mode','???')
+                decode_band = state.get(payload.id_key, {}).get('band','???')
+                decode_dialfreq = state.get(payload.id_key, {}).get('freq','???')
+
                 if use_mqtt:
-                    mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr).rjust(2), 'dt': payload.delta_time, 'freq': str(payload.delta_freq).rjust(4), 'mode': payload.mode, 'msg': payload.message})
+                    mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr).rjust(2), 'dt': payload.delta_time, 'dialfreq': decode_dialfreq, 'freq': str(payload.delta_freq).rjust(4), 'mode': decode_mode, 'band': decode_band, 'msg': payload.message})
                     mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
                 if log_decodes:
-                    out_log.write("[{}] db:{:0>2} DT:{:.1f} Freq:{} Mode:{} Msg: {}\n".format(
+                    out_log.write("[{}] db:{:0>2} DT:{:.1f} Freq:{} DFreq:{} Mode:{} Msg: {}\n".format(
                             payload.now_time,
                             str(payload.snr).rjust(2),
                             payload.delta_time,
+                            decode_dialfreq,
                             str(payload.delta_freq).rjust(4),
-                            payload.mode,
+                            decode_mode,
                             payload.message))
                 if use_curses:
                     jt_curses.add_main_window("[{}] db:{:0>2} DT:{:.1f} Freq:{} Mode:{} Msg: {}".format(
@@ -152,7 +163,7 @@ def main():
                             str(payload.snr).rjust(2),
                             payload.delta_time,
                             str(payload.delta_freq).rjust(4),
-                            payload.mode,
+                            decode_mode,
                             payload.message)
                             )
                 else:
@@ -229,7 +240,7 @@ def main():
                                     if notify_alert:
                                         popup_toast(log.dxcc.find_country(cq_call))
                                     if use_mqtt:
-                                        mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr), 'dxcc_call': cq_call, 'dxcc_locator': cq_loc, 'dxcc_country': log.dxcc.find_country(cq_call), 'dxcc_band': current_band})
+                                        mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr), 'dxcc_call': cq_call, 'dxcc_locator': cq_loc, 'dxcc_country': log.dxcc.find_country(cq_call), 'dxcc_band': decode_band, 'dialfreq': decode_dialfreq})
                                         mqtt_client.publish("py_wsjtx/{}/dxcc".format(payload.id_key), mqtt_msg)
 
                             # Now display
