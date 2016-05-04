@@ -149,24 +149,22 @@ def main():
                 if use_mqtt:
                     mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr).rjust(2), 'dt': payload.delta_time, 'dialfreq': decode_dialfreq, 'freq': str(payload.delta_freq).rjust(4), 'mode': decode_mode, 'band': decode_band, 'msg': payload.message})
                     mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
+
+
+                info = "[{}] db:{:0>2} DT:{:.1f} Freq:{} DFreq:{} Mode:{} Msg: {}\n".format(
+                        payload.now_time,
+                        str(payload.snr).rjust(2),
+                        payload.delta_time,
+                        decode_dialfreq,
+                        str(payload.delta_freq).rjust(4),
+                        decode_mode,
+                        payload.message)
+
                 if log_decodes:
-                    out_log.write("[{}] db:{:0>2} DT:{:.1f} Freq:{} DFreq:{} Mode:{} Msg: {}\n".format(
-                            payload.now_time,
-                            str(payload.snr).rjust(2),
-                            payload.delta_time,
-                            decode_dialfreq,
-                            str(payload.delta_freq).rjust(4),
-                            decode_mode,
-                            payload.message))
+                    out_log.write("{}\n".format(info))
+
                 if use_curses:
-                    jt_curses.add_main_window("[{}] db:{:0>2} DT:{:.1f} Freq:{} Mode:{} Msg: {}".format(
-                            payload.now_time,
-                            str(payload.snr).rjust(2),
-                            payload.delta_time,
-                            str(payload.delta_freq).rjust(4),
-                            decode_mode,
-                            payload.message)
-                            )
+                    jt_curses.add_main_window(info)
                 else:
                     payload.do_print()
 
@@ -196,26 +194,6 @@ def main():
                                 cq_loc = ""
 
                         if (myutils.validate_callsign(cq_call)):
-                            # band = log.check_entry(cq_call, current_band)
-                            # if band == log.WORKED_COUNTRY_AND_STATION:
-                            #     # Worked before on same band
-                            #     colour = bcolors.WKD_BEFORE
-                            #     status = "Call:Y;Band:Y;Country:Y"
-                            #
-                            # elif band == log.WORKED_COUNTRY_DIFF_BAND:
-                            #     # worked before on different band
-                            #     colour = bcolors.WKD_COUNTRY_DIFF_BAND
-                            #     status = "Call:N;Band:N;Country:Y"
-                            #
-                            # elif band == log.WORKED_COUNTRY_NOT_STATION:
-                            #     # Worked country, not station
-                            #     colour = bcolors.WKD_COUNTRY_NOT_STATION
-                            #     status = "Call:N;Band:Y;Country:Y"
-                            #
-                            # else:
-                            #     # not worked
-                            #     colour = bcolors.NOT_WORKED
-                            #     status = "Call:N;Band:N;Country:N"
                             band = log.check_entry2(cq_call, current_band)
                             if band["call"]:
                                 if band["call_band"]:
@@ -308,17 +286,26 @@ def main():
 
             elif packet_type == PacketType.WSPRDecode:
                 payload = WSPRDecode(data[12:])
+
+                if use_mqtt:
+                    mqtt_msg = json.dumps({'WSPR_call': payload.callsign, 'grid': payload.grid, 'dist': payload.dist})
+                    mqtt_client.publish("py_wsjtx/{}/status".format(payload.id_key), mqtt_msg)
+
+                info = "WSPR [{}]: {:10} ({:6}) db:{:4}, Freq:{:>10,}Hz, pwr:{:4}, Dist:{:>5.0f}km, Az: {:>3.0f}".format(
+                    payload.now_time,
+                    payload.callsign,
+                    payload.grid,
+                    payload.snr,
+                    payload.delta_freq,
+                    payload.power,
+                    payload.dist,
+                    payload.bearing)
+
+                if log_decodes:
+                    out_log.write("{}\n".format(info))
+                    
                 if use_curses:
-                    jt_curses.add_main_window("WSPR [{}]: {:10} ({:6}) db:{:4}, Freq:{:>10,}Hz, pwr:{:4}, Dist:{:>5.0f}km, Az: {:>3.0f}".format(
-                        payload.now_time,
-                        payload.callsign,
-                        payload.grid,
-                        payload.snr,
-                        payload.delta_freq,
-                        payload.power,
-                        payload.dist,
-                        payload.bearing)
-                    )
+                    jt_curses.add_main_window(info)
                 else:
                     payload.do_print()
 
