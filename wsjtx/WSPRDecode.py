@@ -18,17 +18,18 @@ class WSPRDecode:
     power = 0
 
     def __init__(self, data):
+        # myutils.debug_hex(data)
         string_length, self.id_key = myutils.get_utf8_string(data)
-        # print("  id_key: {} (len:{})".format(self.id_key, string_length))
         tmp = 4 + string_length
+        # print("  id_key: {} (len:{})".format(self.id_key, string_length))
 
         self.new_id = myutils.get_boolean(data[tmp:])
         # print("  [*] new: {}".format(self.new_id))
         tmp += myutils.DataSize._boolean
         # print("  [*] new_id:{}".format(self.new_id))
 
-        self.now_time = myutils.get_datetime(data[tmp:])
-        tmp += myutils.DataSize._datetime
+        self.now_time = myutils.get_time(data[tmp:])
+        tmp += myutils.DataSize._time
         # print("  [*] date:{}".format(self.now_time))
 
         self.snr = myutils.get_int32(data[tmp:])
@@ -62,23 +63,20 @@ class WSPRDecode:
         self.power = myutils.get_uint32(data[tmp:])
         # print("  [*] power:{}".format(self.power))
 
-    def do_print(self):
-        dist = 0
-        bearing = 0
+        self.dist = 0
+        self.bearing = 0
         if (myutils.validate_callsign(self.callsign)):
             if (myutils.validate_locator(self.grid)):
-                dist = locator.calculate_distance("io64", self.grid)
-                bearing = locator.calculate_heading("io64", self.grid)
-                # print(" [*] Distance: {:.0f}km, Bearing:{:.0f}".format(
-                #       locator.calculate_distance("io64", self.grid),
-                #       locator.calculate_heading("io64", self.grid)
-                #       ))
+                self.dist = locator.calculate_distance("io64", self.grid)
+                self.bearing = locator.calculate_heading("io64", self.grid)
 
-        print("WSPR Decode: {:10} ({:6}) db:{:4}, Freq:{:>10,}Hz, Dist:{:>5.0f}km, Az: {:>3.0f}".format(
+    def do_print(self):
+        print("WSPR Decode: {:10} ({:6}) db:{:4}, Freq:{:>10,}Hz, pwr:{:4}, Dist:{:>5.0f}km, Az: {:>3.0f}".format(
             self.callsign,
             self.grid,
             self.snr,
             self.delta_freq,
-            dist,
-            bearing
+            self.power,
+            self.dist,
+            self.bearing
         ))

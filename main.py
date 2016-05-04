@@ -62,7 +62,8 @@ def main():
     sock.bind(server_address)
 
     use_curses = True
-    jt_curses = WsjtxCurses()
+    if use_curses:
+        jt_curses = WsjtxCurses()
 
     # Enable DXCC notify alerts
     notify_alert = True
@@ -140,7 +141,7 @@ def main():
                 # myutils.debug_packet(data)
                 payload = Decode(data[12:])
 
-		# Get current radio state or return ???
+		        # Get current radio state or return ???
                 decode_mode = state.get(payload.id_key, {}).get('mode','???')
                 decode_band = state.get(payload.id_key, {}).get('band','???')
                 decode_dialfreq = state.get(payload.id_key, {}).get('freq','???')
@@ -307,7 +308,19 @@ def main():
 
             elif packet_type == PacketType.WSPRDecode:
                 payload = WSPRDecode(data[12:])
-                payload.do_print()
+                if use_curses:
+                    jt_curses.add_main_window("WSPR [{}]: {:10} ({:6}) db:{:4}, Freq:{:>10,}Hz, pwr:{:4}, Dist:{:>5.0f}km, Az: {:>3.0f}".format(
+                        payload.now_time,
+                        payload.callsign,
+                        payload.grid,
+                        payload.snr,
+                        payload.delta_freq,
+                        payload.power,
+                        payload.dist,
+                        payload.bearing)
+                    )
+                else:
+                    payload.do_print()
 
             else:
                 if use_curses:
