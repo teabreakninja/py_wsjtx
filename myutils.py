@@ -167,7 +167,7 @@ def jd_to_date(jd):
 
 def validate_callsign(call):
     import re
-    valid = re.match('^[a-zA-Z0-9]{1,2}\d{1,2}[a-zA-Z]{1,3}$', call, re.DOTALL)
+    valid = re.match('^[a-zA-Z0-9]{1,2}\d{1,2}[a-zA-Z]{1,3}(/[pP])?$', call, re.DOTALL)
     if valid:
         return True
     else:
