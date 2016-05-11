@@ -65,12 +65,15 @@ def main():
     if use_curses:
         jt_curses = WsjtxCurses()
 
+    # Exit py_wsjtx on WSJT-X exit
+    exit_on_wsjtxexit = False
+
     # Enable DXCC notify alerts
     notify_alert = True
 
     # Publish mqtt messages, requires paho installed
     use_mqtt = False
-    mqtt_server = "192.168.0.200"
+    mqtt_server = "192.168.0.201"
 
     # Write all decodes to a log file
     log_decodes = False
@@ -151,7 +154,7 @@ def main():
                     mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
 
 
-                info = "[{}] db:{:0>2} DT:{:.1f} Freq:{} DFreq:{} Mode:{} Msg: {}\n".format(
+                info = "[{}] db:{:0>2} DT:{:.1f} Freq:{} DFreq:{} Mode:{} Msg: {}".format(
                         payload.now_time,
                         str(payload.snr).rjust(2),
                         payload.delta_time,
@@ -270,7 +273,8 @@ def main():
                     jt_curses.add_main_window("[!] Exit called")
                 else:
                     payload.do_print
-                sys.exit(0)
+                if exit_on_wsjtxexit:
+                    sys.exit(0)
 
             elif packet_type == PacketType.Replay:
                 # Not used, this is an out message
@@ -287,9 +291,11 @@ def main():
             elif packet_type == PacketType.WSPRDecode:
                 payload = WSPRDecode(data[12:])
 
+                decode_band = state.get(payload.id_key, {}).get('band','???')
+
                 if use_mqtt:
-                    mqtt_msg = json.dumps({'WSPR_call': payload.callsign, 'grid': payload.grid, 'dist': payload.dist})
-                    mqtt_client.publish("py_wsjtx/{}/status".format(payload.id_key), mqtt_msg)
+                    mqtt_msg = json.dumps({'WSPR_call': payload.callsign, 'band': decode_band, 'grid': payload.grid, 'dist': int(payload.dist), 'pwr': payload.power, 'db': payload.snr})
+                    mqtt_client.publish("py_wsjtx/{}/wspr".format(payload.id_key), mqtt_msg)
 
                 info = "WSPR [{}]: {:10} ({:6}) db:{:4}, Freq:{:>10,}Hz, pwr:{:4}, Dist:{:>5.0f}km, Az: {:>3.0f}".format(
                     payload.now_time,
@@ -298,7 +304,7 @@ def main():
                     payload.snr,
                     payload.delta_freq,
                     payload.power,
-                    payload.dist,
+                    int(payload.dist),
                     payload.bearing)
 
                 if log_decodes:
