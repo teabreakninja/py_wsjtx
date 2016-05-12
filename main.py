@@ -304,7 +304,7 @@ def main():
                     payload.snr,
                     payload.delta_freq,
                     payload.power,
-                    int(payload.dist),
+                    payload.dist,
                     payload.bearing)
 
                 if log_decodes:
