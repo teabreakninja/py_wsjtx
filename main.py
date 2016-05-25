@@ -72,8 +72,8 @@ def main():
     notify_alert = True
 
     # Publish mqtt messages, requires paho installed
-    use_mqtt = False
-    mqtt_server = "192.168.0.201"
+    use_mqtt = True
+    mqtt_server = "192.168.0.12"
 
     # Write all decodes to a log file
     log_decodes = False
@@ -97,7 +97,8 @@ def main():
     if use_mqtt:
         import paho.mqtt.client as paho
         mqtt_client=paho.Client()
-        mqtt_client.connect(mqtt_server)
+        mqtt_client.connect(mqtt_server, keepalive=60)
+        mqtt_client.loop_start()
         mqtt_client.publish("py_wsjtx/status", "Started at {}".format(datetime.datetime.now()))
 
     # # Replay is PITA when testing
@@ -154,12 +155,20 @@ def main():
                     mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
 
 
-                info = "[{}] db:{:0>2} DT:{:.1f} Freq:{} DFreq:{} Mode:{} Msg: {}".format(
+                # info = "[{}] db:{:0>2} DT:{:.1f} Freq:{} DFreq:{} Mode:{} Msg: {}".format(
+                #         payload.now_time,
+                #         str(payload.snr).rjust(2),
+                #         payload.delta_time,
+                #         decode_dialfreq,
+                #         str(payload.delta_freq).rjust(4),
+                #         decode_mode,
+                #         payload.message)
+
+                info = "[{}] {:>3}db, {:>4}Hz, {:>3}, {:>3}, Msg: {}".format(
                         payload.now_time,
                         str(payload.snr).rjust(2),
-                        payload.delta_time,
-                        decode_dialfreq,
                         str(payload.delta_freq).rjust(4),
+                        decode_band,
                         decode_mode,
                         payload.message)
 
@@ -234,7 +243,7 @@ def main():
                                                 band)
                             else:
                                 print("[***] CQ CALLED BY {}{}{} ({}) [{}]".format(colour, cq_call, bcolors.ENDC, cq_loc, status))
-                                if (myutils.validate_locator(cq[2])):
+                                if (myutils.validate_locator(cq_loc)):
                                     print("  [*] Distance: {:.0f}km, Bearing:{:.0f}".format(
                                             locator.calculate_distance("io64", cq_loc),
                                             locator.calculate_heading("io64", cq_loc)
@@ -309,7 +318,7 @@ def main():
 
                 if log_decodes:
                     out_log.write("{}\n".format(info))
-                    
+
                 if use_curses:
                     jt_curses.add_main_window(info)
                 else:
