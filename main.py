@@ -13,8 +13,10 @@ from pyhamtools import locator
 from read_log import WsjtxLog
 from WsjtxCurses import WsjtxCurses
 
+import gi
+gi.require_version('Notify', '0.7')
 from gi.repository import Notify
-
+from cgi import escape  # popup notify needs html escaped
 
 class bcolors:
     """
@@ -47,7 +49,7 @@ class bcolors:
 
 def popup_toast(cty):
     Notify.init("DX")
-    dx = Notify.Notification.new("DX", "New Country:{}".format(cty), "dialog-information")
+    dx = Notify.Notification.new("DX", "New Country:{}".format(escape(cty)), "dialog-information")
     dx.set_timeout(2000)
     dx.show()
 
