@@ -13,7 +13,10 @@ from pyhamtools import locator
 from read_log import WsjtxLog
 from WsjtxCurses import WsjtxCurses
 
+import gi
+gi.require_version('Notify', '0.7')
 from gi.repository import Notify
+from cgi import escape  # popup notify needs html escaped
 
 
 class bcolors:
@@ -47,11 +50,19 @@ class bcolors:
 
 def popup_toast(cty):
     Notify.init("DX")
-    dx = Notify.Notification.new("DX", "New Country:{}".format(cty), "dialog-information")
-    dx.set_timeout(2000)
-    dx.show()
+    dx = Notify.Notification.new("py_wsjtx", "New Country:{}".format(escape(str(cty))), "dialog-information")
+    dx.set_timeout(5000)
+    try:
+        dx.show()
+    except:
+        # some weird error on manjaro:
+        # GLib.Error: g-dbus-error-quark: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name :1.55 was not provided by any .service
+        # Installed notification-deamon
+        pass
+    # Notify.uninit()
 
 def main():
+    global out_log
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
@@ -70,6 +81,8 @@ def main():
 
     # Enable DXCC notify alerts
     notify_alert = True
+    if notify_alert:
+        popup_toast('Notifications enabled')
 
     # Publish mqtt messages, requires paho installed
     use_mqtt = True
@@ -100,6 +113,7 @@ def main():
         mqtt_client.connect(mqtt_server, keepalive=60)
         mqtt_client.loop_start()
         mqtt_client.publish("py_wsjtx/status", "Started at {}".format(datetime.datetime.now()))
+
 
     # # Replay is PITA when testing
     # data, server = sock.recvfrom(1024)
@@ -137,7 +151,7 @@ def main():
                                          payload.tx_mode,
                                          payload.tx_enabled)
                 else:
-                    print payload.do_print()
+                    print(payload.do_print())
                 current_band = log.get_band(str(payload.dial_freq/1000/1000))
                 # print("[!] Current band: {}".format(current_band))
 
@@ -248,6 +262,7 @@ def main():
                                             locator.calculate_distance("io64", cq_loc),
                                             locator.calculate_heading("io64", cq_loc)
                                         ))
+
                         else:
                             msg = "[*] CQ by non-valid callsign?"
                             if use_curses:
@@ -339,4 +354,5 @@ def main():
         print("ctrl-c caught, exiting")
 
 if __name__ == "__main__":
+    out_log = None
     main()

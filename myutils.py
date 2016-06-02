@@ -181,3 +181,9 @@ def validate_locator(loc):
         return True
     else:
         return False
+
+def write_error_log(err):
+    ol = open('/tmp/py_wsjtx_error.log', 'a', 0)
+    ol.write("Err at {}: {}\n".format(datetime.datetime.now(), err))
+    ol.close()
+
