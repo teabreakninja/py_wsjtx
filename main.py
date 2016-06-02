@@ -5,6 +5,7 @@ import sys
 import datetime
 import json
 
+import config
 from header import header
 from wsjtx import *
 import myutils
@@ -65,36 +66,36 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    server_address = ('127.0.0.1', 2237)
+    # server_address = ('127.0.0.1', 2237)
 
-    # sock.sendto('test message', server_address)
+    # sock.sendto('test message', config.server_address)
 
-    sock.bind(server_address)
+    sock.bind(config.server_address)
 
-    use_curses = True
-    if use_curses:
+    # config.use_curses = True
+    if config.use_curses:
         jt_curses = WsjtxCurses()
 
     # Exit py_wsjtx on WSJT-X exit
-    exit_on_wsjtxexit = False
+    # exit_on_wsjtxexit = False
 
     # Enable DXCC notify alerts
-    notify_alert = True
-    if notify_alert:
+    # notify_alert = True
+    if config.notify_alert:
         popup_toast('Notifications enabled')
 
     # Publish mqtt messages, requires paho installed
-    use_mqtt = True
-    mqtt_server = "192.168.0.12"
+    # config.use_mqtt = True
+    # mqtt_server = "192.168.0.12"
 
     # Write all decodes to a log file
-    log_decodes = False
-    log_outfile = "/tmp/py_wsjtx.log"
+    config.log_decodes = False
+    config.log_outfile = "/tmp/py_wsjtx.log"
 
     # Read existing log file
     log = WsjtxLog()
     log_info = "[*] Logfile found, {} entries read, {} stations.".format(log.entry_count, len(log.log_entries))
-    if use_curses:
+    if config.use_curses:
         jt_curses.add_main_window(log_info)
     else:
         print(log_info)
@@ -102,14 +103,14 @@ def main():
     current_band = ""
     state = {}
 
-    if log_decodes:
-        out_log = open(log_outfile, 'a', 0)
+    if config.log_decodes:
+        out_log = open(config.log_outfile, 'a', 0)
         out_log.write("Started Log at {}\n".format(datetime.datetime.now()))
 
-    if use_mqtt:
+    if config.use_mqtt:
         import paho.mqtt.client as paho
         mqtt_client=paho.Client()
-        mqtt_client.connect(mqtt_server, keepalive=60)
+        mqtt_client.connect(config.mqtt_server, keepalive=60)
         mqtt_client.loop_start()
         mqtt_client.publish("py_wsjtx/status", "Started at {}".format(datetime.datetime.now()))
 
@@ -130,7 +131,7 @@ def main():
             # print("[*] packet_type:{}".format(packet_type))
             if packet_type == PacketType.Heartbeat:
                 payload = Heartbeat(data[12:])
-                if use_curses:
+                if config.use_curses:
                     jt_curses.update_heartbeat(datetime.datetime.now().strftime("%H:%M:%S"))
                 else:
                     print("[*] Heartbeat [{}]".format(datetime.datetime.now()))
@@ -139,18 +140,26 @@ def main():
                 payload = StateChange(data[12:])
 
                 # Set a per radio state
-                state[payload.id_key] = {'freq': payload.dial_freq, 'mode': payload.tx_mode, 'tx': payload.tx_enabled, 'band': log.get_band(str(payload.dial_freq/1000/1000))}
+                state[payload.id_key] = {'freq': payload.dial_freq,
+                                        'mode': payload.tx_mode,
+                                        'tx': payload.tx_enabled,
+                                        'band': log.get_band(str(payload.dial_freq/1000/1000))
+                                        }
 
-                if use_mqtt:
-                    mqtt_msg = json.dumps({'status_frequency': payload.dial_freq, 'status_mode': payload.tx_mode, 'status_tx': payload.tx_enabled})
+                if config.use_mqtt:
+                    mqtt_msg = json.dumps({'status_frequency': payload.dial_freq,
+                                        'status_mode': payload.tx_mode,
+                                        'status_tx': payload.tx_enabled}
+                               )
                     mqtt_client.publish("py_wsjtx/{}/status".format(payload.id_key), mqtt_msg)
 
-                if use_curses:
+                if config.use_curses:
                     jt_curses.set_banner(payload.dial_freq,
                                          payload.tx_mode,
                                          payload.tx_enabled)
                 else:
                     print(payload.do_print())
+
                 current_band = log.get_band(str(payload.dial_freq/1000/1000))
                 # print("[!] Current band: {}".format(current_band))
 
@@ -163,8 +172,16 @@ def main():
                 decode_band = state.get(payload.id_key, {}).get('band','???')
                 decode_dialfreq = state.get(payload.id_key, {}).get('freq','???')
 
-                if use_mqtt:
-                    mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr).rjust(2), 'dt': payload.delta_time, 'dialfreq': decode_dialfreq, 'freq': str(payload.delta_freq).rjust(4), 'mode': decode_mode, 'band': decode_band, 'msg': payload.message})
+                if config.use_mqtt:
+                    mqtt_msg = json.dumps({'time': payload.now_time,
+                            'db': str(payload.snr).rjust(2),
+                            'dt': payload.delta_time,
+                            'dialfreq': decode_dialfreq,
+                            'freq': str(payload.delta_freq).rjust(4),
+                            'mode': decode_mode,
+                            'band': decode_band,
+                            'msg': payload.message}
+                    )
                     mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
 
 
@@ -185,10 +202,10 @@ def main():
                         decode_mode,
                         payload.message)
 
-                if log_decodes:
+                if config.log_decodes:
                     out_log.write("{}\n".format(info))
 
-                if use_curses:
+                if config.use_curses:
                     jt_curses.add_main_window(info)
                 else:
                     payload.do_print()
@@ -241,14 +258,14 @@ def main():
                                 else:
                                     colour = bcolors.NOT_WORKED
                                     status = log.NOT_WORKED
-                                    if notify_alert:
+                                    if config.notify_alert:
                                         popup_toast(log.dxcc.find_country(cq_call))
-                                    if use_mqtt:
+                                    if config.use_mqtt:
                                         mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr), 'dxcc_call': cq_call, 'dxcc_locator': cq_loc, 'dxcc_country': log.dxcc.find_country(cq_call), 'dxcc_band': decode_band, 'dialfreq': decode_dialfreq})
                                         mqtt_client.publish("py_wsjtx/{}/dxcc".format(payload.id_key), mqtt_msg)
 
                             # Now display
-                            if use_curses:
+                            if config.use_curses:
                                 jt_curses.add_cq(cq_call,
                                                 status+1,
                                                 cq_loc,
@@ -264,14 +281,14 @@ def main():
 
                         else:
                             msg = "[*] CQ by non-valid callsign?"
-                            if use_curses:
+                            if config.use_curses:
                                 jt_curses.add_main_window(msg)
                             else:
                                 print(msg)
 
             elif packet_type == PacketType.Clear:
                 payload = Clear(data[12:])
-                if use_curses:
+                if config.use_curses:
                     jt_curses.add_main_window("[*] Clear Called")
                 else:
                     payload.do_print()
@@ -283,7 +300,7 @@ def main():
             elif packet_type == PacketType.QSO_Logged:
                 # myutils.debug_packet(data)
                 payload = Qso_Logged(data[12:])
-                if use_curses:
+                if config.use_curses:
                     jt_curses.add_main_window("[*] Logged QSO with {}".format(payload.dx_call))
                 else:
                     payload.do_print()
@@ -292,11 +309,11 @@ def main():
 
             elif packet_type == PacketType.Close:
                 payload = Close(data[12:])
-                if use_curses:
+                if config.use_curses:
                     jt_curses.add_main_window("[!] Exit called")
                 else:
                     payload.do_print
-                if exit_on_wsjtxexit:
+                if config.exit_on_wsjtxexit:
                     sys.exit(0)
 
             elif packet_type == PacketType.Replay:
@@ -316,7 +333,7 @@ def main():
 
                 decode_band = state.get(payload.id_key, {}).get('band','???')
 
-                if use_mqtt:
+                if config.use_mqtt:
                     mqtt_msg = json.dumps({'WSPR_call': payload.callsign, 'band': decode_band, 'grid': payload.grid, 'dist': int(payload.dist), 'pwr': payload.power, 'db': payload.snr})
                     mqtt_client.publish("py_wsjtx/{}/wspr".format(payload.id_key), mqtt_msg)
 
@@ -330,24 +347,24 @@ def main():
                     payload.dist,
                     payload.bearing)
 
-                if log_decodes:
+                if config.log_decodes:
                     out_log.write("{}\n".format(info))
 
-                if use_curses:
+                if config.use_curses:
                     jt_curses.add_main_window(info)
                 else:
                     payload.do_print()
 
             else:
-                if use_curses:
+                if config.use_curses:
                     jt_curses.add_main_window("[*] Packet type: {}".format(packet_type))
                 else:
                     print("[*] Packet type: {}".format(packet_type))
 
     except KeyboardInterrupt:
-        if use_curses:
+        if config.use_curses:
             jt_curses.exit_now()
-        if log_decodes:
+        if config.log_decodes:
             out_log.write("Closed Log at {}\n".format(datetime.datetime.now()))
             out_log.close()
         print("ctrl-c caught, exiting")
