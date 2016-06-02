@@ -9,7 +9,7 @@ server_address = ('127.0.0.1', 2237)
 use_curses = True
 
 # exit py_wsjtx on WSJT-X exit
-exit_on_wsjtexit = False
+exit_on_wsjtxexit = False
 
 # show popup notifications
 notify_alert = True
