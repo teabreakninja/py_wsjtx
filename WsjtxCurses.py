@@ -65,9 +65,11 @@ class WsjtxCurses:
         return bands.get(f[0],'???')
 
     def set_banner(self, freq, mode, tx):
+        self.header.addstr(1, 2, ' '*30)
+        self.header.refresh()
         self.header.addstr(1, 2, "Freq: {:,}".format(freq))
         self.header.addstr(1, 20, self.get_band(freq))
-        self.header.addstr(1, 24, "TX:{}".format(str(tx).ljust(5)))
+        self.header.addstr(1, 25, "TX:{}".format(str(tx).ljust(5)))
         self.header.addstr(1, 34, "TxMode:{}".format(mode.ljust(6)))
         self.header.refresh()
         self.stdscr.refresh()
