@@ -18,7 +18,6 @@ gi.require_version('Notify', '0.7')
 from gi.repository import Notify
 from cgi import escape  # popup notify needs html escaped
 
-
 class bcolors:
     """
     Print the terminal colours with bash:
