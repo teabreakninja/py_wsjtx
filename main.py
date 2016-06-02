@@ -136,6 +136,10 @@ def main():
                 else:
                     print("[*] Heartbeat [{}]".format(datetime.datetime.now()))
 
+                if config.use_mqtt:
+                    mqtt_msg = json.dumps({"heartbeat": datetime.datetime.now().strftime("%H:%M:%S")})
+                    mqtt_client.publish("py_wsjtx/{}/status".format(payload.id_key), mqtt_msg)
+
             elif packet_type == PacketType.Status:
                 payload = StateChange(data[12:])
 
@@ -149,8 +153,7 @@ def main():
                 if config.use_mqtt:
                     mqtt_msg = json.dumps({'status_frequency': payload.dial_freq,
                                         'status_mode': payload.tx_mode,
-                                        'status_tx': payload.tx_enabled}
-                               )
+                                        'status_tx': payload.tx_enabled})
                     mqtt_client.publish("py_wsjtx/{}/status".format(payload.id_key), mqtt_msg)
 
                 if config.use_curses:
@@ -167,21 +170,20 @@ def main():
                 # myutils.debug_packet(data)
                 payload = Decode(data[12:])
 
-		        # Get current radio state or return ???
+                # Get current radio state or return ???
                 decode_mode = state.get(payload.id_key, {}).get('mode','???')
                 decode_band = state.get(payload.id_key, {}).get('band','???')
                 decode_dialfreq = state.get(payload.id_key, {}).get('freq','???')
 
                 if config.use_mqtt:
                     mqtt_msg = json.dumps({'time': payload.now_time,
-                            'db': str(payload.snr).rjust(2),
-                            'dt': payload.delta_time,
-                            'dialfreq': decode_dialfreq,
-                            'freq': str(payload.delta_freq).rjust(4),
-                            'mode': decode_mode,
-                            'band': decode_band,
-                            'msg': payload.message}
-                    )
+                                        'db': str(payload.snr).rjust(2),
+                                        'dt': payload.delta_time,
+                                        'dialfreq': decode_dialfreq,
+                                        'freq': str(payload.delta_freq).rjust(4),
+                                        'mode': decode_mode,
+                                        'band': decode_band,
+                                        'msg': payload.message})
                     mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
 
 
@@ -210,6 +212,7 @@ def main():
                 else:
                     payload.do_print()
 
+                # Check for CQ call
                 if payload.message[:2] == "CQ":
                     cq = payload.message.split(" ")
                     if len(cq) > 1:
@@ -235,33 +238,59 @@ def main():
                             else:
                                 cq_loc = ""
 
+                        # Check for valid callsign
                         if (myutils.validate_callsign(cq_call)):
+
+                            # Have we worked call before?
                             band = log.check_entry2(cq_call, current_band)
+
                             if band["call"]:
+                                # worked call before
                                 if band["call_band"]:
+                                    # ...and worked call on this band
                                     colour = bcolors.WKD_BEFORE
                                     status = log.WORKED_COUNTRY_AND_STATION
+
                                 elif band["country_band"]:
+                                    # Worked call on a different band but 
+                                    # also worked country on this band
                                     colour = bcolors.WKD_COUNTRY_NOT_STATION
                                     status = log.WORKED_COUNTRY_NOT_STATION
+
                                 else:
+                                    # TODO: check flags
                                     colour = bcolors.WKD_COUNTRY_DIFF_BAND
                                     status = log.WORKED_COUNTRY_DIFF_BAND
+
                             else:
+                                # call not worked
                                 if band["country"]:
                                     if band["country_band"]:
+                                        # ...but have worked country on this band
                                         colour = bcolors.WKD_COUNTRY_NOT_STATION
                                         status = log.WORKED_COUNTRY_NOT_STATION
+
                                     else:
+                                        # ...but have worked country before, on different band
                                         colour = bcolors.WKD_COUNTRY_DIFF_BAND
                                         status = log.WORKED_COUNTRY_DIFF_BAND
+
                                 else:
+                                    # Call or country not worked, raise DXCC alert
                                     colour = bcolors.NOT_WORKED
                                     status = log.NOT_WORKED
+
                                     if config.notify_alert:
                                         popup_toast(log.dxcc.find_country(cq_call))
+
                                     if config.use_mqtt:
-                                        mqtt_msg = json.dumps({'time': payload.now_time, 'db': str(payload.snr), 'dxcc_call': cq_call, 'dxcc_locator': cq_loc, 'dxcc_country': log.dxcc.find_country(cq_call), 'dxcc_band': decode_band, 'dialfreq': decode_dialfreq})
+                                        mqtt_msg = json.dumps({'time': payload.now_time,
+                                                        'db': str(payload.snr),
+                                                        'dxcc_call': cq_call,
+                                                        'dxcc_locator': cq_loc,
+                                                        'dxcc_country': log.dxcc.find_country(cq_call),
+                                                        'dxcc_band': decode_band,
+                                                        'dialfreq': decode_dialfreq})
                                         mqtt_client.publish("py_wsjtx/{}/dxcc".format(payload.id_key), mqtt_msg)
 
                             # Now display
@@ -334,18 +363,23 @@ def main():
                 decode_band = state.get(payload.id_key, {}).get('band','???')
 
                 if config.use_mqtt:
-                    mqtt_msg = json.dumps({'WSPR_call': payload.callsign, 'band': decode_band, 'grid': payload.grid, 'dist': int(payload.dist), 'pwr': payload.power, 'db': payload.snr})
+                    mqtt_msg = json.dumps({'WSPR_call': payload.callsign,
+                                        'band': decode_band,
+                                        'grid': payload.grid,
+                                        'dist': int(payload.dist),
+                                        'pwr': payload.power,
+                                        'db': payload.snr})
                     mqtt_client.publish("py_wsjtx/{}/wspr".format(payload.id_key), mqtt_msg)
 
                 info = "WSPR [{}]: {:10} ({:6}) db:{:4}, Freq:{:>10,}Hz, pwr:{:4}, Dist:{:>5.0f}km, Az: {:>3.0f}".format(
-                    payload.now_time,
-                    payload.callsign,
-                    payload.grid,
-                    payload.snr,
-                    payload.delta_freq,
-                    payload.power,
-                    payload.dist,
-                    payload.bearing)
+                            payload.now_time,
+                            payload.callsign,
+                            payload.grid,
+                            payload.snr,
+                            payload.delta_freq,
+                            payload.power,
+                            payload.dist,
+                            payload.bearing)
 
                 if config.log_decodes:
                     out_log.write("{}\n".format(info))
