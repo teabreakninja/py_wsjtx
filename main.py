@@ -57,9 +57,10 @@ def popup_toast(cty):
     except:
         # some weird error on manjaro:
         # GLib.Error: g-dbus-error-quark: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name :1.55 was not provided by any .service
-        # Installed notification-deamon
-        pass
+        # (re)Installed notification-deamon and gstreamer0.10-good
+        return False
     # Notify.uninit()
+    return True
 
 def main():
     global out_log
@@ -82,7 +83,8 @@ def main():
     # Enable DXCC notify alerts
     # notify_alert = True
     if config.notify_alert:
-        popup_toast('Notifications enabled')
+        if not popup_toast('Notifications enabled'):
+            jt_curses.add_main_window('[!] Notification Error')
 
     # Publish mqtt messages, requires paho installed
     # config.use_mqtt = True
@@ -281,7 +283,8 @@ def main():
                                     status = log.NOT_WORKED
 
                                     if config.notify_alert:
-                                        popup_toast(log.dxcc.find_country(cq_call))
+                                        if not popup_toast(log.dxcc.find_country(cq_call)):
+                                            jt_curses.add_main_window('[!] Failed to notify CQ')
 
                                     if config.use_mqtt:
                                         mqtt_msg = json.dumps({'time': payload.now_time,
