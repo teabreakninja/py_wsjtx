@@ -49,7 +49,7 @@ class bcolors:
 
 
 def popup_toast(cty):
-    Notify.init("DX")
+    # Notify.init("DX")
     dx = Notify.Notification.new("py_wsjtx", "New Country:{}".format(escape(str(cty))), "dialog-information")
     dx.set_timeout(5000)
     try:
@@ -83,6 +83,7 @@ def main():
     # Enable DXCC notify alerts
     # notify_alert = True
     if config.notify_alert:
+        Notify.init("DX")
         if not popup_toast('Notifications enabled'):
             jt_curses.add_main_window('[!] Notification Error')
 
@@ -173,7 +174,8 @@ def main():
                 payload = Decode(data[12:])
 
                 # Get current radio state or return ???
-                decode_mode = state.get(payload.id_key, {}).get('mode','???')
+                # decode_mode = state.get(payload.id_key, {}).get('mode','???')
+                decode_mode = "JT65" if payload.mode == '#' else "JT9"
                 decode_band = state.get(payload.id_key, {}).get('band','???')
                 decode_dialfreq = state.get(payload.id_key, {}).get('freq','???')
 
@@ -198,7 +200,7 @@ def main():
                 #         decode_mode,
                 #         payload.message)
 
-                info = "[{}] {:>3}db, {:>4}Hz, {:>3}, {:>3}, Msg: {}".format(
+                info = "[{}] {:>3}db, {:>4}Hz, {:>3}, {:>4}, Msg: {}".format(
                         payload.now_time,
                         str(payload.snr).rjust(2),
                         str(payload.delta_freq).rjust(4),
@@ -405,6 +407,8 @@ def main():
             out_log.write("Closed Log at {}\n".format(datetime.datetime.now()))
             out_log.close()
         print("ctrl-c caught, exiting")
+        if config.notify_alert:
+            Notify.uninit()
 
 if __name__ == "__main__":
     out_log = None
