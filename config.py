@@ -19,6 +19,9 @@ notify_alert = True
 use_mqtt = True
 mqtt_server = "192.168.0.12"
 
+# locator for distance / bearing
+locator = "io64"
+
 # write all decodes to a log file
 log_decodes = False
 log_outfile = "/tmp/py_wsjtx.log"
