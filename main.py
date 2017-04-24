@@ -307,6 +307,7 @@ def main():
                                                         'dxcc_call': cq_call,
                                                         'dxcc_locator': cq_loc,
                                                         'dxcc_country': log.dxcc.find_country(cq_call),
+                                                        'dxcc_mode': decode_mode,
                                                         'dxcc_band': decode_band,
                                                         'dialfreq': decode_dialfreq})
                                         mqtt_client.publish("py_wsjtx/{}/dxcc".format(payload.id_key), mqtt_msg)
@@ -322,8 +323,8 @@ def main():
                                 print("[***] CQ CALLED BY {}{}{} ({}) [{}]".format(colour, cq_call, bcolors.ENDC, cq_loc, status))
                                 if (myutils.validate_locator(cq_loc)):
                                     print("  [*] Distance: {:.0f}km, Bearing:{:.0f}".format(
-                                            locator.calculate_distance("io64", cq_loc),
-                                            locator.calculate_heading("io64", cq_loc)
+                                            locator.calculate_distance(config.locator, cq_loc),
+                                            locator.calculate_heading(config.locator, cq_loc)
                                         ))
 
                         else:
