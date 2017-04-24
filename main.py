@@ -49,7 +49,7 @@ class bcolors:
 
 
 def popup_toast(cty):
-    # Notify.init("DX")
+    Notify.init("DX")
     dx = Notify.Notification.new("py_wsjtx", "New Country:{}".format(escape(str(cty))), "dialog-information")
     dx.set_timeout(5000)
     try:
@@ -174,8 +174,17 @@ def main():
                 payload = Decode(data[12:])
 
                 # Get current radio state or return ???
-                # decode_mode = state.get(payload.id_key, {}).get('mode','???')
-                decode_mode = "JT65" if payload.mode == '#' else "JT9"
+                decode_mode = state.get(payload.id_key, {}).get('mode','???')
+
+                # If it's JT65/JT9 mode, check actual received signal mode
+                if decode_mode == "JT9" or decode_mode == "JT65":
+                    if payload.mode == '#':
+                        decode_mode = "JT65"
+                    elif payload.mode == "@":
+                        decode_mode = "JT9"
+                    else:
+                        decode_mode = "ERR"
+
                 decode_band = state.get(payload.id_key, {}).get('band','???')
                 decode_dialfreq = state.get(payload.id_key, {}).get('freq','???')
 
@@ -223,24 +232,28 @@ def main():
                         # CQ call should be 'CQ CALL LOC', but can be:
                         # 'CQ DX CALL LOC' or
                         # 'CQ CALL DX LOC'
-                        cq_call = cq[1]
-                        if len(cq) == 2:
-                            cq_loc = ""
-                        else:
-                            cq_loc = cq[2]
-
-                        if cq_call == "DX":
-                            cq_call = cq[2]
-                            if len(cq) > 3:
-                                cq_loc = cq[3]
-                            else:
+                        try:
+                            cq_call = cq[1]
+                            if len(cq) == 2:
                                 cq_loc = ""
-
-                        if cq_loc == "DX":
-                            if len(cq) > 3:
-                                cq_loc = cq[3]
                             else:
-                                cq_loc = ""
+                                cq_loc = cq[2]
+
+                            if cq_call == "DX":
+                                cq_call = cq[2]
+                                if len(cq) > 3:
+                                    cq_loc = cq[3]
+                                else:
+                                    cq_loc = ""
+
+                            if cq_loc == "DX":
+                                if len(cq) > 3:
+                                    cq_loc = cq[3]
+                                else:
+                                    cq_loc = ""
+                        except:
+                            print("[!] Error parsing CQ call")
+                            continue
 
                         # Check for valid callsign
                         if (myutils.validate_callsign(cq_call)):
