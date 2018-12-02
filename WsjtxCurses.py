@@ -59,7 +59,8 @@ class WsjtxCurses:
                     "14": "20m",
                     "10": "30m",
                     "7" : "40m",
-                    "3" : "80m"
+                    "3" : "80m",
+                    "1" : "160m"
                 }
         f = str(freq/1000/1000).split(".")
         return bands.get(f[0],'???')

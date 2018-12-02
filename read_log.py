@@ -37,7 +37,8 @@ class WsjtxLog:
                  "14": "20m",
                  "10": "30m",
                  "7" : "40m",
-                 "3" : "80m"
+                 "3" : "80m",
+                 "1" : "160m"
                 }
         f = freq.split(".")
         # Check 70cm range
