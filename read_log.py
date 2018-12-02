@@ -54,9 +54,14 @@ class WsjtxLog:
 
             for row in f:
                 entry = row.split(",")
+                # Check for new version of log, 12 items. Old has 11
                 # print entry[2], self.get_band(entry[4])
-                call = entry[2]
-                band = self.get_band(entry[4])
+                if len(entry) == 11:
+                    call = entry[2]
+                    band = self.get_band(entry[4])
+                else:
+                    call = entry[4]
+                    band = self.get_band(entry[6])
 
                 if not call in self.log_entries:
                     self.log_entries[call] = []

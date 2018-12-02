@@ -30,12 +30,12 @@ class DataSize():
 
 
 def debug_packet(data):
-    print ":".join("{:02x}".format(ord(c)) for c in data)
+    print (":".join("{:02x}".format(ord(c)) for c in data))
 
 
 def debug_hex(data):
-    print "[=] ",
-    print ":".join("{:02x}".format(ord(c)) for c in data)
+    print ("[=] "),
+    print (":".join("{:02x}".format(ord(c)) for c in data))
 
 
 def get_utf8_string(data):
@@ -47,7 +47,7 @@ def get_utf8_string(data):
     elif data[0:4] == "\xFF\xFF\xFF\xFF":
         string_length, the_string = 0, ""
     else:
-        the_string = data[4:4 + string_length]
+        the_string = data[4:4 + string_length].decode('UTF-8')
         # print("[*] Key = {}".format(the_string))
 
     return string_length, the_string
@@ -110,7 +110,7 @@ def get_time(data):
 
     import time
     t = time.gmtime(julian_day/1000)
-    dt = time.strftime("%H:%M", t)
+    dt = time.strftime("%H:%M:%S", t)
 
     return dt
 

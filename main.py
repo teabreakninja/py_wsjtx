@@ -17,7 +17,7 @@ from WsjtxCurses import WsjtxCurses
 import gi
 gi.require_version('Notify', '0.7')
 from gi.repository import Notify
-from cgi import escape  # popup notify needs html escaped
+from html import escape  # popup notify needs html escaped
 
 class bcolors:
     """
@@ -112,8 +112,8 @@ def main():
 
     if config.use_mqtt:
         import paho.mqtt.client as paho
-        mqtt_client=paho.Client()
-        mqtt_client.connect(config.mqtt_server, keepalive=60)
+        mqtt_client=paho.Client(protocol=paho.MQTTv31)
+        mqtt_client.connect(config.mqtt_server, keepalive=60, )
         mqtt_client.loop_start()
         mqtt_client.publish("py_wsjtx/status", "Started at {}".format(datetime.datetime.now()))
 
@@ -149,20 +149,20 @@ def main():
                 # Set a per radio state
                 state[payload.id_key] = {'freq': payload.dial_freq,
                                         'mode': payload.tx_mode,
-                                        'tx': payload.tx_enabled,
+                                        'tx': str(payload.tx_enabled),
                                         'band': log.get_band(str(payload.dial_freq/1000/1000))
                                         }
 
                 if config.use_mqtt:
-                    mqtt_msg = json.dumps({'status_frequency': payload.dial_freq,
-                                        'status_mode': payload.tx_mode,
-                                        'status_tx': payload.tx_enabled})
+                    mqtt_msg = json.dumps({'status_frequency': str(payload.dial_freq),
+                                        'status_mode': str(payload.tx_mode),
+                                        'status_tx': str(payload.tx_enabled)})
                     mqtt_client.publish("py_wsjtx/{}/status".format(payload.id_key), mqtt_msg)
 
                 if config.use_curses:
                     jt_curses.set_banner(payload.dial_freq,
                                          payload.tx_mode,
-                                         payload.tx_enabled)
+                                         str(payload.tx_enabled))
                 else:
                     print(payload.do_print())
 
@@ -197,7 +197,8 @@ def main():
                                         'mode': decode_mode,
                                         'band': decode_band,
                                         'msg': payload.message})
-                    mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
+                    # mqtt_client.publish("py_wsjtx/{}/decodes".format(payload.id_key), mqtt_msg)
+                    mqtt_client.publish("py_wsjtx/{}/decodes".format("WSJT-X"), mqtt_msg)
 
 
                 # info = "[{}] db:{:0>2} DT:{:.1f} Freq:{} DFreq:{} Mode:{} Msg: {}".format(
@@ -215,7 +216,8 @@ def main():
                         str(payload.delta_freq).rjust(4),
                         decode_band,
                         decode_mode,
-                        payload.message)
+                        payload.message
+                )
 
                 if config.log_decodes:
                     out_log.write("{}\n".format(info))
@@ -280,7 +282,7 @@ def main():
                                     status = log.WORKED_COUNTRY_DIFF_BAND
 
                             else:
-                                # call not worked
+                                # call not workedg
                                 if band["country"]:
                                     if band["country_band"]:
                                         # ...but have worked country on this band

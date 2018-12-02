@@ -6,7 +6,7 @@ import myutils
 class Heartbeat:
     packet_type = 0
     id_key = ""
-    max_schema = 0l
+    max_schema = 0
 
     def __init__(self, data):
         string_length, self.id_key = myutils.get_utf8_string(data)

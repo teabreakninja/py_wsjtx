@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import curses
 import time
-import thread
+import _thread
 import locale
 
 class WsjtxCurses:

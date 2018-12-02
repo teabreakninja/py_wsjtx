@@ -3,8 +3,8 @@ import struct
 
 
 class header:
-    magic_number = 0l
-    schema_number = 0l
+    magic_number = 0
+    schema_number = 0
     valid_magic = "0xadbccbda"
     valid_schemas = (1, 2, 3)
 

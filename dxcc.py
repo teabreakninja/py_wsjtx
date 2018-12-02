@@ -81,4 +81,4 @@ if __name__ == "__main__":
     dxcc = Dxcc()
 
     country = dxcc.find_country('EA9BO')
-    print country
+    print(country)
